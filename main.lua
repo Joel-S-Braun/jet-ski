@@ -82,8 +82,14 @@ do
 	end
 end
 
+--@hexadecival
 --fullscreen
-love.window.setFullscreen(true)
+--gross
+local function updatefullscreeninput()
+	if love.keyboard.isDown("x") then
+		love.window.setFullscreen(not love.window.getFullscreen())
+	end
+end
 
 --@hexadecival
 --Move player from input 
@@ -111,4 +117,5 @@ function love.draw()
 	rendercam()
 	renderworld()
 	updateinput()
+	updatefullscreeninput()
 end
