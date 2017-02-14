@@ -102,7 +102,8 @@ end
 --Cam render
 local function rendercam()
 	love.graphics.translate(-cam.pos.x,-cam.pos.y)
-	cam:setpos(player.pos-vec.new(400,300)) --BULLSHIT OFFSET FROM CHAR, CHANGE TO PROPER COORDS TO CENTER
+	local center = vec.new(love.graphics.getWidth()/2,love.graphics.getHeight()/2)
+	cam:setpos(player.pos-center) 
 end
 
 --Render everything
