@@ -82,6 +82,9 @@ do
 	end
 end
 
+--fullscreen
+love.window.setFullscreen(true)
+
 --@hexadecival
 --Move player from input 
 local function updateinput()
