@@ -6,11 +6,18 @@
 --]]
 
 --@hexadecival
+--Preloading
+local images = {}
+function love.load()
+   images.mandem = love.graphics.newImage("mandem_idle.png")
+end
+
+--@hexadecival
 --Vector class
 vec = {}
 vec.__index = vec 
 function vec.new(x,y)
-	return setmetatable({x=x,y=y},vec)
+	return setmetatable({x=x or 0,y=y or 0},vec)
 end
 function vec:dot(that)
 	return self.x*that.x+self.y*that.y
@@ -55,14 +62,17 @@ end
 --object class
 obj = {}
 obj.__index = obj 
-function obj.new(pos)
-	--hacky, idk what im doing really, i just want to call draw on all objs
-	local d = setmetatable({pos=pos},obj)
+function obj.new(image,pos,size) 
+	local d = setmetatable({image=image,pos=pos or vec.new(),size = size or vec.new()},obj)
 	table.insert(drawlist,d)
 	return d
 end
 function obj:draw()
-	love.graphics.rectangle("fill",self.pos.x,self.pos.y,8,8)
+	if self.image == "box" then --idk
+		love.graphics.rectangle("fill",self.pos.x,self.pos.y,self.size.x,self.size.y)
+	else
+		love.graphics.draw(self.image,self.pos.x,self.pos.y,0,self.size.x,self.size.y)
+	end
 end
 function obj:setpos(pos)
 	self.pos = pos
@@ -75,10 +85,10 @@ end
 --World creation
 local player
 do
-	player = obj.new(vec.new(5,5))
+	player = obj.new("box",vec.new(5,5),vec.new(8,8))
 	--generate random shit
 	for i = 1, 10000 do
-		obj.new(vec.new(math.random(-2500,2500),math.random(-2500,2500)))
+		obj.new("box",vec.new(math.random(-2500,2500),math.random(-2500,2500)),vec.new(45,45))
 	end
 end
 
