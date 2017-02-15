@@ -82,7 +82,7 @@ function rigidbody:update()
 	end
 	if vy > 0 then
 		vy = math.max(0,vy-dy)
-	elseif vx < 0 then
+	elseif vy < 0 then
 		vy = math.min(0,vy+dy)
 	end
 	self.velocity = vec.new(vx,vy)
@@ -123,7 +123,7 @@ local player
 local player_controller
 do
 	player = obj.new(newimage("mandem_idle.png"),vec.new(5,5),vec.new(2,2))
-	player_controller = rigidbody.new(player,vec.new(0,0),vec.new(0.8,0.8))
+	player_controller = rigidbody.new(player,vec.new(0,0),vec.new(0.45,0.45))
 	--generate random shit
 	for i = 1, 10000 do
 		obj.new("box",vec.new(math.random(-2500,2500),math.random(-2500,2500)),vec.new(24,24))
@@ -146,8 +146,8 @@ local function updateinput()
 	local a = love.keyboard.isDown("a")
 	local s = love.keyboard.isDown("s")
 	local d = love.keyboard.isDown("d")
-	local mx = a and -1 or d and 1 or 0
-	local my = w and -1 or s and 1 or 0
+	local mx = a and -0.5 or d and 0.5 or 0
+	local my = w and -0.5 or s and 0.5 or 0
 	local mv = vec.new(mx,my)
 	player_controller.velocity = player_controller.velocity + mv
 end
