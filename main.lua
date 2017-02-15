@@ -123,7 +123,7 @@ local player
 local player_controller
 do
 	player = obj.new(newimage("mandem_idle.png"),vec.new(5,5),vec.new(2,2))
-	player_controller = rigidbody.new(player,vec.new(0,0),vec.new(1,1))
+	player_controller = rigidbody.new(player,vec.new(0,0),vec.new(0.8,0.8))
 	--generate random shit
 	for i = 1, 10000 do
 		obj.new("box",vec.new(math.random(-2500,2500),math.random(-2500,2500)),vec.new(24,24))
