@@ -5,11 +5,14 @@
     @hexadecival & waffloid
 --]]
 
+--apparently you need this to render pixelated gfx properly lol
+love.graphics.setLineStyle( 'rough' ) 
+love.graphics.setDefaultFilter("nearest", "nearest")
+
 --@hexadecival
---Preloading
-local images = {}
-function love.load()
-   images.mandem = love.graphics.newImage("mandem_idle.png")
+--Image creation
+function newimage(dir)
+	return love.graphics.newImage(dir)
 end
 
 --@hexadecival
@@ -51,6 +54,7 @@ do
 	local rendist = 1000 --rendering distance 
 	function renderworld()
 		for i, obj in pairs (drawlist) do
+			obj:updatecomponents()
 			if ((obj.pos-vec.new(400,300))-cam.pos):mag() < rendist then
 				obj:draw()
 			end
@@ -59,13 +63,39 @@ do
 end
 
 --@hexadecival
+--rigidbody class
+rigidbody = {}
+rigidbody.__index = rigidbody
+function rigidbody.new(obj,velocity,drag)
+	local class = setmetatable({obj=obj,velocity=velocity,drag=drag},rigidbody)
+	table.insert(obj.components,class)
+	return class
+end
+function rigidbody:update()
+	self.obj.pos = self.obj.pos + self.velocity
+	local dx, dy = self.drag.x,self.drag.y
+	local vx, vy = self.velocity.x,self.velocity.y
+	if vx > 0 then
+		vx = vx - dx
+	elseif vx < 0 then
+		vx = vx + dx
+	end
+	if vy > 0 then
+		vy = vy - dy
+	elseif vx < 0 then
+		vy = vy + dy
+	end
+	self.velocity = vec.new(vx,vy)
+end
+
+--@hexadecival
 --object class
 obj = {}
 obj.__index = obj 
 function obj.new(image,pos,size) 
-	local d = setmetatable({image=image,pos=pos or vec.new(),size = size or vec.new()},obj)
-	table.insert(drawlist,d)
-	return d
+	local class = setmetatable({image=image,pos=pos or vec.new(),size = size or vec.new(),components = {}},obj)
+	table.insert(drawlist,class)
+	return class
 end
 function obj:draw()
 	if self.image == "box" then --idk
@@ -80,15 +110,23 @@ end
 function obj:move(pos)
 	self.pos = self.pos + pos
 end
+--unity style component system
+function obj:updatecomponents()
+	for _, component in pairs (self.components) do
+		component:update()
+	end
+end
 
 --@hexadecival
 --World creation
 local player
+local player_controller
 do
-	player = obj.new("box",vec.new(5,5),vec.new(8,8))
+	player = obj.new(newimage("mandem_idle.png"),vec.new(5,5),vec.new(2,2))
+	player_controller = rigidbody.new(player,vec.new(0,0),vec.new(1,1))
 	--generate random shit
 	for i = 1, 10000 do
-		obj.new("box",vec.new(math.random(-2500,2500),math.random(-2500,2500)),vec.new(45,45))
+		obj.new("box",vec.new(math.random(-2500,2500),math.random(-2500,2500)),vec.new(24,24))
 	end
 end
 
@@ -111,7 +149,7 @@ local function updateinput()
 	local mx = a and -1 or d and 1 or 0
 	local my = w and -1 or s and 1 or 0
 	local mv = vec.new(mx,my)
-	player:move(mv)
+	player_controller.velocity = player_controller.velocity + mv
 end
 
 --@hexadecival
