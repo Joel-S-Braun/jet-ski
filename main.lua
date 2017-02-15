@@ -76,14 +76,14 @@ function rigidbody:update()
 	local dx, dy = self.drag.x,self.drag.y
 	local vx, vy = self.velocity.x,self.velocity.y
 	if vx > 0 then
-		vx = vx - dx
+		vx = math.max(0,vx-dx)
 	elseif vx < 0 then
-		vx = vx + dx
+		vx = math.min(0,vx+dx)
 	end
 	if vy > 0 then
-		vy = vy - dy
+		vy = math.max(0,vy-dy)
 	elseif vx < 0 then
-		vy = vy + dy
+		vy = math.min(0,vy+dy)
 	end
 	self.velocity = vec.new(vx,vy)
 end
