@@ -1,22 +1,41 @@
 --[[
     @12/3/17
     @skipleb studios
-    @client(?)
+    @core engine(?)
     @hexadecival & waffloid
 --]]
 
---apparently you need this to render pixelated gfx properly lol
-love.graphics.setLineStyle( 'rough' ) 
-love.graphics.setDefaultFilter("nearest", "nearest")
+--[[
+	@notes: 
+	-@hexadecival: use diff files instead of cramping everythin into main.lua
+	-@hexadecival: handle drawlist and components more efficiently
+	-@hexadecival: handle tilemap system differently (use voxel system wen waffle makes it)
+	-@hexadecival: solve colissions and implement gravity + jumping for player
+	-@hexadecival: ?work on networking backend?
+	-@hexadecival: implement rotations and scaling
+	-@hexadecival: UI backend / classes
+	-@hexadecival: create some particle system for A E S T E T H I C S
+	-@hexadecival: implement spritesheet system and more efficient image-related memory handling
+	-@hexadecival: create animation framework and necessary classes for it
+	-@hexadecival: create raycasting algorithm
+--]]
 
 --@hexadecival
---Image creation
+--initialization
+do
+	dofile("jet-ski/mapdata.lua")
+	love.graphics.setLineStyle( 'rough' ) 
+	love.graphics.setDefaultFilter("nearest", "nearest")
+end
+
+--@hexadecival
+--image creation
 function newimage(dir)
 	return love.graphics.newImage(dir)
 end
 
 --@hexadecival
---Vector class
+--vector class
 vec = {}
 vec.__index = vec 
 function vec.new(x,y)
@@ -36,7 +55,7 @@ function vec:__sub(that)
 end
 
 --@hexadecival
---Camera class
+--camera class
 cam = {
 	pos = vec.new(0,0)
 }
@@ -48,7 +67,7 @@ function cam:setpos(pos)
 end
 
 --@hexadecival
---Render world (hacky shit)
+--render world (hacky shit)
 local drawlist = {}
 do
 	local rendist = 1000 --rendering distance 
@@ -66,15 +85,17 @@ end
 --rigidbody class
 rigidbody = {}
 rigidbody.__index = rigidbody
-function rigidbody.new(obj,velocity,drag)
-	local class = setmetatable({obj=obj,velocity=velocity,drag=drag},rigidbody)
+function rigidbody.new(obj,velocity,drag,maxvelocity)
+	local class = setmetatable({obj=obj,velocity=velocity,drag=drag,maxvelocity=maxvelocity},rigidbody)
 	table.insert(obj.components,class)
 	return class
 end
 function rigidbody:update()
-	self.obj.pos = self.obj.pos + self.velocity
 	local dx, dy = self.drag.x,self.drag.y
 	local vx, vy = self.velocity.x,self.velocity.y
+	local mx, my = self.maxvelocity.x,self.maxvelocity.y
+	vx = math.max(-mx,math.min(vx,mx))
+	vy = math.max(-my,math.min(vy,mx))
 	if vx > 0 then
 		vx = math.max(0,vx-dx)
 	elseif vx < 0 then
@@ -85,6 +106,7 @@ function rigidbody:update()
 	elseif vy < 0 then
 		vy = math.min(0,vy+dy)
 	end
+	self.obj.pos = self.obj.pos + self.velocity
 	self.velocity = vec.new(vx,vy)
 end
 
@@ -110,7 +132,7 @@ end
 function obj:move(pos)
 	self.pos = self.pos + pos
 end
---unity style component system
+--crappy unity style component system
 function obj:updatecomponents()
 	for _, component in pairs (self.components) do
 		component:update()
@@ -118,16 +140,37 @@ function obj:updatecomponents()
 end
 
 --@hexadecival
---World creation
+--tilemap/voxel/map loader
+function loadmap(mapdata)
+	local tiledata = {
+		[0] = nil, --air
+		[1] = {image="box",size=vec.new(24,24)}, --solid
+		[5] = {image=newimage("mandem_idle.png"),size=vec.new(2,2)} --roadman
+	}
+	local tiles = mapdata.tiles
+	local x = 0
+	local y = 0
+	for i = 1, #tiles do
+		x = x + 1
+		local tile = tiledata[tiles[i]]
+		if tile ~= nil then
+			obj.new(tile.image,vec.new(24*x,24*y),tile.size)
+		end
+		if x == mapdata.width then
+			x = 0
+			y = y + 1
+		end
+	end
+end
+
+--@hexadecival
+--world creation
 local player
 local player_controller
 do
 	player = obj.new(newimage("mandem_idle.png"),vec.new(5,5),vec.new(2,2))
-	player_controller = rigidbody.new(player,vec.new(0,0),vec.new(0.45,0.45))
-	--generate random shit
-	for i = 1, 10000 do
-		obj.new("box",vec.new(math.random(-2500,2500),math.random(-2500,2500)),vec.new(24,24))
-	end
+	player_controller = rigidbody.new(player,vec.new(0,0),vec.new(0.1,0.1),vec.new(4,4))
+	loadmap(skimap)
 end
 
 --@hexadecival
@@ -140,7 +183,7 @@ local function updatefullscreeninput()
 end
 
 --@hexadecival
---Move player from input 
+--move player from input 
 local function updateinput()
 	local w = love.keyboard.isDown("w")
 	local a = love.keyboard.isDown("a")
@@ -153,14 +196,14 @@ local function updateinput()
 end
 
 --@hexadecival
---Cam render
+--cam render
 local function rendercam()
 	love.graphics.translate(-cam.pos.x,-cam.pos.y)
 	local center = vec.new(love.graphics.getWidth()/2,love.graphics.getHeight()/2)
 	cam:setpos(player.pos-center) 
 end
 
---Render everything
+--render everything
 function love.draw()
 	rendercam()
 	renderworld()
