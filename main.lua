@@ -121,6 +121,7 @@ function obj.new(image,pos,size)
 end
 function obj:draw()
 	if self.image == "box" then --idk
+		love.graphics.rectangle("fill",self.pos.x-10,self.pos.y,1,1)
 		love.graphics.rectangle("fill",self.pos.x,self.pos.y,self.size.x,self.size.y)
 	else
 		love.graphics.draw(self.image,self.pos.x,self.pos.y,0,self.size.x,self.size.y)
@@ -148,13 +149,14 @@ function loadmap(mapdata)
 		[5] = {image=newimage("mandem_idle.png"),size=vec.new(2,2)} --roadman
 	}
 	local tiles = mapdata.tiles
+	local tilesize = mapdata.tilesize
 	local x = 0
 	local y = 0
 	for i = 1, #tiles do
 		x = x + 1
 		local tile = tiledata[tiles[i]]
 		if tile ~= nil then
-			obj.new(tile.image,vec.new(24*x,24*y),tile.size)
+			obj.new(tile.image,vec.new(tilesize*x,tilesize*y),tile.size)
 		end
 		if x == mapdata.width then
 			x = 0
