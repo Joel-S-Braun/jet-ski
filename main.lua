@@ -121,7 +121,6 @@ function obj.new(image,pos,size)
 end
 function obj:draw()
 	if self.image == "box" then --idk
-		love.graphics.rectangle("fill",self.pos.x-10,self.pos.y,1,1)
 		love.graphics.rectangle("fill",self.pos.x,self.pos.y,self.size.x,self.size.y)
 	else
 		love.graphics.draw(self.image,self.pos.x,self.pos.y,0,self.size.x,self.size.y)
