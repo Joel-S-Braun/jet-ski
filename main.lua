@@ -28,6 +28,8 @@ do
 	love.graphics.setDefaultFilter("nearest", "nearest")
 end
 
+local anim = require("animation")
+
 --@hexadecival
 --image creation
 function newimage(dir)
@@ -52,6 +54,9 @@ function vec:__add(that)
 end
 function vec:__sub(that)
 	return vec.new(self.x-that.x,self.y-that.y)
+end
+function vec:__div(that)
+	return vec.new(self.x/that,self.y/that)
 end
 
 --@hexadecival
@@ -90,6 +95,11 @@ function rigidbody.new(obj,velocity,drag,maxvelocity)
 	table.insert(obj.components,class)
 	return class
 end
+function coldetect(a,b) --SIMPLISTIC AS HELL METHOD for now LOL
+	if (a.pos-b.pos):mag() <= (a.size/2+b.size/2):mag() then
+		return true
+	end
+end
 function rigidbody:update()
 	local dx, dy = self.drag.x,self.drag.y
 	local vx, vy = self.velocity.x,self.velocity.y
@@ -106,16 +116,32 @@ function rigidbody:update()
 	elseif vy < 0 then
 		vy = math.min(0,vy+dy)
 	end
-	self.obj.pos = self.obj.pos + self.velocity
+	local colliding = false
+	local correction = vec.new(0,0)
+	for i, obj in pairs(drawlist) do
+		if obj ~= self.obj then
+			if coldetect(self.obj,obj) then
+				print("col : "..self.obj.name.." : true : "..obj.name)
+				print("col : "..self.obj.name.." : false : "..obj.name)
+				colliding = true
+			end
+		end
+	end
+	if colliding then
+		vx,vy = -vx,-vy
+	else
+		vy = vy + 0 --gravity dlc
+	end
 	self.velocity = vec.new(vx,vy)
+	self.obj.pos = self.obj.pos + self.velocity 
 end
 
 --@hexadecival
 --object class
 obj = {}
 obj.__index = obj 
-function obj.new(image,pos,size) 
-	local class = setmetatable({image=image,pos=pos or vec.new(),size = size or vec.new(),components = {}},obj)
+function obj.new(image,pos,size,name) 
+	local class = setmetatable({name=name or "object",image=image,pos=pos or vec.new(),size = size or vec.new(),components = {}},obj)
 	table.insert(drawlist,class)
 	return class
 end
@@ -155,7 +181,7 @@ function loadmap(mapdata)
 		x = x + 1
 		local tile = tiledata[tiles[i]]
 		if tile ~= nil then
-			obj.new(tile.image,vec.new(tilesize*x,tilesize*y),tile.size)
+			obj.new(tile.image,vec.new(tilesize*x,tilesize*y),tile.size,"tile"..x.."|"..y)
 		end
 		if x == mapdata.width then
 			x = 0
@@ -167,10 +193,13 @@ end
 --@hexadecival
 --world creation
 local player
+local player_animator
 local player_controller
 do
-	player = obj.new(newimage("mandem_idle.png"),vec.new(5,5),vec.new(2,2))
+	player = obj.new(newimage("mandem_idle.png"),vec.new(5,5),vec.new(2,2),"player")
 	player_controller = rigidbody.new(player,vec.new(0,0),vec.new(0.1,0.1),vec.new(4,4))
+	player_animator = anim.new(player,"mandem_anims")
+	player_animator:play()
 	loadmap(skimap)
 end
 
