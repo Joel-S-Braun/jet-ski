@@ -17,7 +17,7 @@
 anim = {}
 anim.__index = anim 
 function anim.new(obj,name)
-	local class = setmetatable({obj=obj,data=require(name),state=0,frame=1,time=0},anim)
+	local class = setmetatable({obj=obj,data=require("animations/"..name),state=0,frame=1,time=0},anim)
 	table.insert(obj.components,class)
 	return class
 end
@@ -25,7 +25,7 @@ function anim:update()
 	if self.state == 1 then
 		if self.frame <= #self.data then
 			local data = self.data[self.frame]
-			self.obj.image = newimage(data[1])
+			self.obj.image = love.graphics.newImage("images/"..data[1])
 			self.time = self.time + 1/60
 			if self.time >= data[2] then
 				self.time = 0
