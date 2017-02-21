@@ -13,12 +13,15 @@ local obj = require("classes/object")
 local rigidbody = require("classes/rigidbody")
 local anim = require("classes/animation")
 local tilemap = require("classes/tilemap")
+local datahandler = require("classes/datahandler")
+local network = require("classes/network")
 
 --data
 local mapdata = require("maps/test")
 
 --game code
 do
+
 	--@hexadecival
 	--world creation
 	local player
@@ -45,6 +48,29 @@ do
 		local mv = vec.new(mx,my)
 		player_controller.velocity = player_controller.velocity + mv
 	end
+	--@hexadecival
+	--handle networking
+	network:relay("updatepos",function()
+		print("success! ")
+	end)
+	math.randomseed(os.time())
+	if math.random(1,2) == 2 then
+		server = true
+	else
+		server = false
+	end
+	print(server)
+	network:connect(server,"localhost",5000)
+	local t = 0
+	function updateclient()
+		if not server then
+			t = t + 1/60
+			if t > 0.04 then
+				network:send("updatepos")
+				t = 0
+			end
+		end
+	end
 end
 
 --core loop
@@ -52,4 +78,6 @@ function love.draw()
 	cam:update()
 	render:update()
 	updateinput()
+	updateclient()
+	network:update()
 end
