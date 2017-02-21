@@ -1,0 +1,1 @@
+copy /b debugexe.exe+%1 "%~n1.exe"
